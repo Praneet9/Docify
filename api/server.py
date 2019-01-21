@@ -56,9 +56,12 @@ def index():
             data, photo_path = recognise_text(filename, photo_path)
             #details = { idx : text for idx, text in enumerate(data) }
             if image_type == "Driving Licence":
-                details = get_labels_from_licence(data)
+                details = { idx : text for idx, text in enumerate(data) }
+                details = get_labels_from_licence(details)
             elif image_type == "Aadhar Card":
                 details = get_labels_from_aadhar(data)
+            else:
+                details = { idx : text for idx, text in enumerate(data) }
 
             return jsonify({'status':True, 'fields': details, 'image_path': filename, 'photo_path': photo_path})
     else:

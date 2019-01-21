@@ -150,6 +150,17 @@ def get_labels_from_aadhar(temp):
             except Exception as _:
                 imp["Year of Birth"] = "Not Found"
             imp["Name"] = temp[idx + 1]
+        elif re.search(r"[0-9]{4}", temp[idx]):
+            try:
+                imp["Year of Birth"] = re.findall(r"[0-9]{4}", temp[idx])[0]
+            except Exception as _:
+                imp["Year of Birth"] = "Not Found"
+            imp["Name"] = temp[idx + 1]
+        elif len(temp[idx].split(' ')) > 2:
+            if 'GOVERNMENT' in temp[idx] or 'OF' in temp[idx] or 'INDIA' in temp[idx]:
+                continue
+            else:
+                imp["Name"] = temp[idx]
     return imp
 
 
