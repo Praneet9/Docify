@@ -52,67 +52,74 @@ def clean_text(text):
 
 def get_labels_from_licence(details1):
     imp = {}
+    print(details1)
     for idx in range(len(details1)):
         if 'DL No' in details1[idx]:
             try:
                 imp["DL NO"] = details1[idx].split('DL No')[-1].strip()
             except Exception as _:
                 imp["DL NO"] = "Not Found"
-            del details1[idx]
+            # del details1[idx]
         elif details1[idx].startswith('DOB'):
             dob = re.findall(r"([0-9]{2}\-[0-9]{2}\-[0-9]{4})", details1[idx].split(' ', 1)[-1])[0]
             #imp["DOB"] = details1[idx].split(' ', 1)[1].strip().split(r"[0-9]{0,2}\-[0-9]{0,2}\-[0-9]{0,4}", 1)[0]
             imp["Date of Birth"] = dob
-            del details1[idx]
+            # del details1[idx]
             imp["Name"] = details1[idx + 1].split(' ', 1)[-1].strip()
-            del details1[idx + 1]
+            # del details1[idx + 1]
             try:
                 imp["Father's Name"] = details1[idx + 2].split('of',1)[1].strip()
-                del details1[idx + 2]
+                # del details1[idx + 2]
             except Exception as _:
                 imp["Father's Name"] = details1[idx + 2].split('Of',1)[1].strip()
-                del details1[idx + 2]
+                # del details1[idx + 2]
             i = 4
             address = details1[idx + 3].split('Add', 1)[1].strip()
-            del details1[idx + 3]
+            # del details1[idx + 3]
             while not details1[idx + i].startswith('PIN') and i < 8:
                 if details1[idx + i].isupper() != True:
-                    del details1[idx + i]
+                    # del details1[idx + i]
                     i += 1
                     continue
                 address += ' ' + details1[idx + i]
-                del details1[idx + i]
+                # del details1[idx + i]
                 i += 1
             imp["Address"] = address
-            imp["Pin Code"] = details1[idx + i].split(' ', 1)[1]
-            del details1[idx + i]
+            try:
+                imp["Pin Code"] = re.findall(r"([0-9]{6})", details1[idx + i].split(' ', 1)[1])[0]
+            except Exception as _:
+                pass
+            # del details1[idx + i]
             break
         elif details1[idx].startswith('Name'):
             dob = re.findall(r"([0-9]{2}\-[0-9]{2}\-[0-9]{4})", details1[idx - 1].split(' ', 1)[1])[0]
             imp["Date of Birth"] = dob
-            del details1[idx - 1]
+            # del details1[idx - 1]
             imp["Name"] = details1[idx][4:].strip()
-            del details1[idx]
+            # del details1[idx]
             try:
                 imp["Father's Name"] = details1[idx + 2].split('of',1)[1].strip()
-                del details1[idx + 2]
+                # del details1[idx + 2]
             except Exception as _:
                 imp["Father's Name"] = details1[idx + 2].split('Of',1)[1].strip()
-                del details1[idx + 2]
+                # del details1[idx + 2]
             i = 3
             address = details1[idx + 2].split('Add', 1)[1].strip()
-            del details1[idx + 2]
+            # del details1[idx + 2]
             while not details1[idx + i].startswith('PIN') and i < 7:
                 if details1[idx + i].isupper() != True:
-                    del details1[idx + i]
+                    # del details1[idx + i]
                     i += 1
                     continue
                 address += ' ' + details1[idx + i]
-                del details1[idx + i]
+                # del details1[idx + i]
                 i += 1
             imp["Address"] = address
-            imp["Pin Code"] = details1[idx + i].split(' ', 1)[1]
-            del details1[idx + i]
+            try:
+                imp["Pin Code"] = re.findall(r"([0-9]{6})", details1[idx + i].split(' ', 1)[1])[0]
+            except Exception as _:
+                pass
+            # del details1[idx + i]
             break
     return imp
 
@@ -166,16 +173,32 @@ def get_labels_from_aadhar(temp):
 
 def seven_segment(image_path):
     
-    image = cv2.imread(image_path, 0)
+    test = cv2.imread(image_path)
+    test = cv2.cvtColor(test, cv2.COLOR_BGR2LAB)
+    test, _, _ = cv2.split(test)
+    hist,bins = np.histogram(test,256,[0,256])
+    mean = int((np.argmax(hist) + np.argmin(hist)) / 3)
+    test[test > mean] = 255
+    test[test <= mean] = 0
+    cv2.imwrite('test.jpg', test)
 
+    test = cv2.imread(image_path)
+    test = cv2.cvtColor(test, cv2.COLOR_BGR2LAB)
+    test, _, _ = cv2.split(test)
+    test = cv2.adaptiveThreshold(test,255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY,15,5)
+    test = cv2.fastNlMeansDenoising(test, None, 4, 7, 21)
+    cv2.imwrite('testadap.jpg', test)
+
+    image = cv2.imread(image_path, 0)
+    cv2.imwrite('image.jpg', image)
     hist, _ = np.histogram(image,256,[0,256])
 
-    _, img = cv2.threshold(image, np.argmax(hist) - 15, 255, cv2.THRESH_BINARY_INV)
-
+    _, img = cv2.threshold(image, np.argmax(hist) - 10, 255, cv2.THRESH_BINARY_INV)
+    cv2.imwrite('thresh.jpg', img)
     noise_cleared = cv2.fastNlMeansDenoising(img, None, 4, 7, 21)
-
+    cv2.imwrite('denoise.jpg', noise_cleared)
     lines_removed = _lineRemoval(noise_cleared)
-
+    cv2.imwrite('lines.jpg', lines_removed)
     text = _character_segmentation(lines_removed)
 
     return text
@@ -327,7 +350,7 @@ def _character_segmentation(img):
     
     dilated = cv2.dilate(img, np.ones((1, 1)), iterations = 2)
     dilated = cv2.dilate(img, np.ones((40, 1)), iterations = 1)
-    
+    cv2.imwrite('dilated.jpg', dilated)
     # canny = cv2.Canny(dilated, 30, 150)
     
     _, ctrs_line, _ = cv2.findContours(dilated.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
