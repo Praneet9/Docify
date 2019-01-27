@@ -87,6 +87,16 @@ def index():
             else:
                 details = { idx : text for idx, text in enumerate(data) }
 
+            with open('outputs.txt', 'a+') as f:
+                f.write("##########################################################################\n\n")
+                f.write('######################## Raw Output #############################\n\n')
+                for value in data:
+                    f.write(value + '\n')
+                f.write('\n\n######################## Cleaned Output #############################\n\n')
+                for key, value in details.items():
+                    f.write(key + ' : ' + value + '\n')
+                f.write("##########################################################################\n\n")
+
             # return the details and the image name and photo path it is saved as
             return jsonify({'status':True, 'fields': details, 'image_path': filename, 'photo_path': photo_path})
     else:
