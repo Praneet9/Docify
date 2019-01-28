@@ -1,6 +1,6 @@
 from flask import Flask, request, jsonify
 import os
-from processing import recognise_text, seven_segment, _init_model, get_labels_from_aadhar, get_labels_from_licence
+from processing import recognise_text, crop_aadhar, get_address, seven_segment, _init_model, get_labels_from_aadhar, get_labels_from_licence
 from cheque_details_extraction import get_micrcode, ensemble_acc_output, ensemble_ifsc_output
 import datetime
 import db
@@ -67,6 +67,30 @@ def index():
             # return the details and the image name it is saved as
             return jsonify({'status':True, 'fields': details, 'image_path': filename, 'photo_path': 'none' })
 
+        elif image_type == 'Aadhar Back':
+            details = {}
+
+            # get photo from android
+            photo = request.files['photo']
+            photo.save(filename)
+
+            crop_path = UPLOAD_FOLDER + image_type + '/temp/' + current_time + '.png'
+
+            if not os.path.exists(UPLOAD_FOLDER + image_type + '/temp'):
+                os.mkdir(UPLOAD_FOLDER + image_type + '/temp')
+
+            crop_aadhar(filename, crop_path)
+
+            # recognise text in the id card
+            data, photo_path = recognise_text(crop_path, 'none')
+            
+            details = get_address(data)
+
+            os.remove(crop_path)
+
+            # return the details and the image name it is saved as
+            return jsonify({'status':True, 'fields': details, 'image_path': filename, 'photo_path': 'none' })
+        
         else:
             # setting directory for saving face in the id card
             photo_path = UPLOAD_FOLDER + image_type + '/' + 'faces' + '/' + current_time + '.png'
