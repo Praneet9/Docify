@@ -77,90 +77,93 @@ def get_labels_from_licence(details1):
     # loop through all the details found line wise
     for idx in range(len(details1)):
 
-        # if DL No is found save it
-        if 'DL No' in details1[idx]:
-            try:
-                imp["DL NO"] = details1[idx].split('DL No')[-1].strip()
-            except Exception as _:
-                imp["DL NO"] = "Not Found"
+        try:
+            # if DL No is found save it
+            if 'DL No' in details1[idx]:
+                try:
+                    imp["DL NO"] = details1[idx].split('DL No')[-1].strip()
+                except Exception as _:
+                    imp["DL NO"] = "Not Found"
+                    
+            # if dob is found, use it as a hook and try finding other details relative to it
+            elif details1[idx].startswith('DOB'):
+                # extract only dob from the text
+                dob = re.findall(r"([0-9]{2}\-[0-9]{2}\-[0-9]{4})", details1[idx].split(' ', 1)[-1])[0]
                 
-        # if dob is found, use it as a hook and try finding other details relative to it
-        elif details1[idx].startswith('DOB'):
-            # extract only dob from the text
-            dob = re.findall(r"([0-9]{2}\-[0-9]{2}\-[0-9]{4})", details1[idx].split(' ', 1)[-1])[0]
-            
-            imp["Date of Birth"] = dob
-            
-            # next line is always name and father's name
-            imp["Name"] = details1[idx + 1].split(' ', 1)[-1].strip()
-            
-            try:
-                # split it from 'of' to get Father's Name
-                imp["Father's Name"] = details1[idx + 2].split('of',1)[1].strip()
+                imp["Date of Birth"] = dob
                 
-            except Exception as _:
-                # handle exception if O is capital in 'of'
-                imp["Father's Name"] = details1[idx + 2].split('Of',1)[1].strip()
+                # next line is always name and father's name
+                imp["Name"] = details1[idx + 1].split(' ', 1)[-1].strip()
                 
-            i = 4
-            # split next line from Add for address
-            address = details1[idx + 3].split('Add', 1)[1].strip()
-            
-            # keep appending until PIN code is found or address is of more than 4 lines
-            while not details1[idx + i].startswith('PIN') and i < 8:
-                if details1[idx + i].isupper() != True:
+                try:
+                    # split it from 'of' to get Father's Name
+                    imp["Father's Name"] = details1[idx + 2].split('of',1)[1].strip()
+                    
+                except Exception as _:
+                    # handle exception if O is capital in 'of'
+                    imp["Father's Name"] = details1[idx + 2].split('Of',1)[1].strip()
+                    
+                i = 4
+                # split next line from Add for address
+                address = details1[idx + 3].split('Add', 1)[1].strip()
+                
+                # keep appending until PIN code is found or address is of more than 4 lines
+                while not details1[idx + i].startswith('PIN') and i < 8:
+                    if details1[idx + i].isupper() != True:
+                        
+                        i += 1
+                        continue
+                    address += ' ' + details1[idx + i]
                     
                     i += 1
-                    continue
-                address += ' ' + details1[idx + i]
+                imp["Address"] = address
+                try:
+                    # get only pin code from the string
+                    imp["Pin Code"] = re.findall(r"([0-9]{6})", details1[idx + i].split(' ', 1)[1])[0]
+                except Exception as _:
+                    pass
+                    
+                break
+            # if name is found, use it as a hook and try finding other details relative to it
+            elif details1[idx].startswith('Name'):
+                # extract only dob from the text
+                dob = re.findall(r"([0-9]{2}\-[0-9]{2}\-[0-9]{4})", details1[idx - 1].split(' ', 1)[1])[0]
+                imp["Date of Birth"] = dob
                 
-                i += 1
-            imp["Address"] = address
-            try:
-                # get only pin code from the string
-                imp["Pin Code"] = re.findall(r"([0-9]{6})", details1[idx + i].split(' ', 1)[1])[0]
-            except Exception as _:
-                pass
+                imp["Name"] = details1[idx][4:].strip()
                 
-            break
-        # if name is found, use it as a hook and try finding other details relative to it
-        elif details1[idx].startswith('Name'):
-            # extract only dob from the text
-            dob = re.findall(r"([0-9]{2}\-[0-9]{2}\-[0-9]{4})", details1[idx - 1].split(' ', 1)[1])[0]
-            imp["Date of Birth"] = dob
-            
-            imp["Name"] = details1[idx][4:].strip()
-            
-            # next line is always name and father's name
-            try:
-                # split it from 'of' to get Father's Name
-                imp["Father's Name"] = details1[idx + 2].split('of',1)[1].strip()
+                # next line is always name and father's name
+                try:
+                    # split it from 'of' to get Father's Name
+                    imp["Father's Name"] = details1[idx + 2].split('of',1)[1].strip()
+                    
+                except Exception as _:
+                    # handle exception if O is capital in 'of'
+                    imp["Father's Name"] = details1[idx + 2].split('Of',1)[1].strip()
+                    
+                i = 3
+                # split next line from Add for address
+                address = details1[idx + 2].split('Add', 1)[1].strip()
                 
-            except Exception as _:
-                # handle exception if O is capital in 'of'
-                imp["Father's Name"] = details1[idx + 2].split('Of',1)[1].strip()
-                
-            i = 3
-            # split next line from Add for address
-            address = details1[idx + 2].split('Add', 1)[1].strip()
-            
-            # keep appending until PIN code is found or address is of more than 4 lines
-            while not details1[idx + i].startswith('PIN') and i < 7:
-                if details1[idx + i].isupper() != True:
+                # keep appending until PIN code is found or address is of more than 4 lines
+                while not details1[idx + i].startswith('PIN') and i < 7:
+                    if details1[idx + i].isupper() != True:
+                        
+                        i += 1
+                        continue
+                    address += ' ' + details1[idx + i]
                     
                     i += 1
-                    continue
-                address += ' ' + details1[idx + i]
-                
-                i += 1
-            imp["Address"] = address
-            try:
-                # get only pin code from the string
-                imp["Pin Code"] = re.findall(r"([0-9]{6})", details1[idx + i].split(' ', 1)[1])[0]
-            except Exception as _:
-                pass
-                
-            break
+                imp["Address"] = address
+                try:
+                    # get only pin code from the string
+                    imp["Pin Code"] = re.findall(r"([0-9]{6})", details1[idx + i].split(' ', 1)[1])[0]
+                except Exception as _:
+                    pass
+                    
+                break
+        except Exception as _:
+            pass
     return imp
 
 
@@ -172,55 +175,59 @@ def get_labels_from_aadhar(temp):
     temp = temp[::-1]
     # parse through the list
     for idx in range(len(temp)):
-        # if string similar to aadhar number is found, use it as a hook to find other details
-        if re.search(r"[0-9]{4}\s[0-9]{4}\s[0-9]{4}", temp[idx]):
-            try:
-                imp['Aadhar No'] = re.findall(r"[0-9]{4}\s[0-9]{4}\s[0-9]{4}", temp[idx])[0]
-            except Exception as _:
-                imp['Aadhar No'] = "Not Found"
-            if temp[idx + 1].endswith("Female") or temp[idx + 1].endswith("FEMALE"):
-                imp["Gender"] = "Female"
-            elif temp[idx + 1].endswith("Male") or temp[idx + 1].endswith("MALE"):
-                imp["Gender"] = "Male"
-            elif temp[idx + 2].endswith("Female") or temp[idx + 2].endswith("FEMALE"):
-                imp["Gender"] = "Female"
-            elif temp[idx + 2].endswith("Male") or temp[idx + 2].endswith("MALE"):
-                imp["Gender"] = "Male"
-            elif temp[idx + 3].endswith("Female") or temp[idx + 3].endswith("FEMALE"):
-                imp["Gender"] = "Female"
-            elif temp[idx + 3].endswith("Male") or temp[idx + 3].endswith("MALE"):
-                imp["Gender"] = "Male"
+        
+        try:
+            # if string similar to aadhar number is found, use it as a hook to find other details
+            if re.search(r"[0-9]{4}\s[0-9]{4}\s[0-9]{4}", temp[idx]):
+                try:
+                    imp['Aadhar No'] = re.findall(r"[0-9]{4}\s[0-9]{4}\s[0-9]{4}", temp[idx])[0]
+                except Exception as _:
+                    imp['Aadhar No'] = "Not Found"
+                if temp[idx + 1].endswith("Female") or temp[idx + 1].endswith("FEMALE"):
+                    imp["Gender"] = "Female"
+                elif temp[idx + 1].endswith("Male") or temp[idx + 1].endswith("MALE"):
+                    imp["Gender"] = "Male"
+                elif temp[idx + 2].endswith("Female") or temp[idx + 2].endswith("FEMALE"):
+                    imp["Gender"] = "Female"
+                elif temp[idx + 2].endswith("Male") or temp[idx + 2].endswith("MALE"):
+                    imp["Gender"] = "Male"
+                elif temp[idx + 3].endswith("Female") or temp[idx + 3].endswith("FEMALE"):
+                    imp["Gender"] = "Female"
+                elif temp[idx + 3].endswith("Male") or temp[idx + 3].endswith("MALE"):
+                    imp["Gender"] = "Male"
 
-        elif re.search(r"[0-9]{2}\-|/[0-9]{2}\-|/[0-9]{4}", temp[idx]):
-            # if string similar to date is found, use it as a hook to find other details
-            try:
-                imp["Date of Birth"] = re.findall(r"[0-9]{2}\-[0-9]{2}\-[0-9]{4}", temp[idx])[0]
-            except Exception as _:
-                imp["Date of Birth"] = re.findall(r"[0-9]{2}/[0-9]{2}/[0-9]{4}", temp[idx])[0]
-            imp["Name"] = temp[idx + 1]
-        
-        elif "Year of Birth" in temp[idx]:
-            # handle variation of 'Year of Birth' in place of DOB
-            try:
-                imp["Year of Birth"] = re.findall(r"[0-9]{4}", temp[idx])[0]
-            except Exception as _:
-                imp["Year of Birth"] = "Not Found"
-            imp["Name"] = temp[idx + 1]
-        
-        elif re.search(r"[0-9]{4}", temp[idx]):
-            # handle exception if Year of Birth is not found but string similar to year is found
-            try:
-                imp["Year of Birth"] = re.findall(r"[0-9]{4}", temp[idx])[0]
-            except Exception as _:
-                imp["Year of Birth"] = "Not Found"
-            imp["Name"] = temp[idx + 1]
-        
-        elif len(temp[idx].split(' ')) > 2:
-            # following text will be name, ignore line if it includes GOVERNMENT OF INDIA
-            if 'GOVERNMENT' in temp[idx] or 'OF' in temp[idx] or 'INDIA' in temp[idx]:
-                continue
-            else:
-                imp["Name"] = temp[idx]
+            elif re.search(r"[0-9]{2}\-|/[0-9]{2}\-|/[0-9]{4}", temp[idx]):
+                # if string similar to date is found, use it as a hook to find other details
+                try:
+                    imp["Date of Birth"] = re.findall(r"[0-9]{2}\-[0-9]{2}\-[0-9]{4}", temp[idx])[0]
+                except Exception as _:
+                    imp["Date of Birth"] = re.findall(r"[0-9]{2}/[0-9]{2}/[0-9]{4}", temp[idx])[0]
+                imp["Name"] = temp[idx + 1]
+            
+            elif "Year of Birth" in temp[idx]:
+                # handle variation of 'Year of Birth' in place of DOB
+                try:
+                    imp["Year of Birth"] = re.findall(r"[0-9]{4}", temp[idx])[0]
+                except Exception as _:
+                    imp["Year of Birth"] = "Not Found"
+                imp["Name"] = temp[idx + 1]
+            
+            elif re.search(r"[0-9]{4}", temp[idx]):
+                # handle exception if Year of Birth is not found but string similar to year is found
+                try:
+                    imp["Year of Birth"] = re.findall(r"[0-9]{4}", temp[idx])[0]
+                except Exception as _:
+                    imp["Year of Birth"] = "Not Found"
+                imp["Name"] = temp[idx + 1]
+            
+            elif len(temp[idx].split(' ')) > 2:
+                # following text will be name, ignore line if it includes GOVERNMENT OF INDIA
+                if 'GOVERNMENT' in temp[idx] or 'OF' in temp[idx] or 'INDIA' in temp[idx]:
+                    continue
+                else:
+                    imp["Name"] = temp[idx]
+        except Exception as _:
+            pass
     return imp
 
 

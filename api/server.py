@@ -67,29 +67,29 @@ def index():
             # return the details and the image name it is saved as
             return jsonify({'status':True, 'fields': details, 'image_path': filename, 'photo_path': 'none' })
 
-        elif image_type == 'Aadhar Back':
-            details = {}
+        # elif image_type == 'Aadhar Back':
+        #     details = {}
 
-            # get photo from android
-            photo = request.files['photo']
-            photo.save(filename)
+        #     # get photo from android
+        #     photo = request.files['photo']
+        #     photo.save(filename)
 
-            crop_path = UPLOAD_FOLDER + image_type + '/temp/' + current_time + '.png'
+        #     crop_path = UPLOAD_FOLDER + image_type + '/temp/' + current_time + '.png'
 
-            if not os.path.exists(UPLOAD_FOLDER + image_type + '/temp'):
-                os.mkdir(UPLOAD_FOLDER + image_type + '/temp')
+        #     if not os.path.exists(UPLOAD_FOLDER + image_type + '/temp'):
+        #         os.mkdir(UPLOAD_FOLDER + image_type + '/temp')
 
-            crop_aadhar(filename, crop_path)
+        #     crop_aadhar(filename, crop_path)
 
-            # recognise text in the id card
-            data, photo_path = recognise_text(crop_path, 'none')
+        #     # recognise text in the id card
+        #     data, photo_path = recognise_text(crop_path, 'none')
             
-            details = get_address(data)
+        #     details = get_address(data)
 
-            os.remove(crop_path)
+        #     os.remove(crop_path)
 
-            # return the details and the image name it is saved as
-            return jsonify({'status':True, 'fields': details, 'image_path': filename, 'photo_path': 'none' })
+        #     # return the details and the image name it is saved as
+        #     return jsonify({'status':True, 'fields': details, 'image_path': filename, 'photo_path': 'none' })
         
         else:
             # setting directory for saving face in the id card
@@ -115,10 +115,10 @@ def index():
                 f.write("##########################################################################\n\n")
                 f.write('######################## Raw Output #############################\n\n')
                 for value in data:
-                    f.write(value + '\n')
+                    f.write(str(value) + '\n')
                 f.write('\n\n######################## Cleaned Output #############################\n\n')
                 for key, value in details.items():
-                    f.write(key + ' : ' + value + '\n')
+                    f.write(str(key) + ' : ' + str(value) + '\n')
                 f.write("##########################################################################\n\n")
 
             # return the details and the image name and photo path it is saved as
