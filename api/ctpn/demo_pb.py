@@ -8,8 +8,6 @@ import sys
 import cv2
 import numpy as np
 import tensorflow as tf
-# from tensorflow.python.platform import gfile
-from tensorflow.gfile import GFile
 
 sys.path.append(os.getcwd())
 from lib.fast_rcnn.config import cfg, cfg_from_file
@@ -24,7 +22,7 @@ cfg_from_file('ctpn/text.yml')
 # init session
 config = tf.ConfigProto(allow_soft_placement=True)
 sess = tf.Session(config=config)
-with GFile('data/ctpn.pb', 'rb') as f:
+with open('data/ctpn.pb', 'rb') as f:
     graph_def = tf.GraphDef()
     graph_def.ParseFromString(f.read())
     sess.graph.as_default()

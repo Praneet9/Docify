@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 import os
 from processing import recognise_text, crop_aadhar, get_address, seven_segment, _init_model, get_labels_from_aadhar, get_labels_from_licence
 from cheque_details_extraction import get_micrcode, ensemble_acc_output, ensemble_ifsc_output
@@ -172,10 +172,10 @@ def face_match():
 
 
 # GET
-@app.route('/test')
-def test():
+@app.route('/')
+def home():
 
-    return "Return Test"
+    return render_template('index.html')
 
 
 # running web app in local machine
