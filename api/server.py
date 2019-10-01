@@ -21,7 +21,7 @@ def index():
     if request.method == 'POST':
 
         # saving current timestamp
-        current_time = str(datetime.datetime.now())
+        current_time = str(datetime.datetime.now()).replace('-', '_').replace(':', '_')
 
         # get the type of image that is being received
         image_type = request.form['type']
