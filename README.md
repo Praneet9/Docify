@@ -1,5 +1,5 @@
 # Docify
-Deep Learning based Android app to extract details from Indian ID cards like Aadhar Card, PAN Card and Driving Licence.
+Deep Learning based Flask api to extract details from Indian ID cards like Aadhar Card, PAN Card and Driving Licence.
 
 #### Tech
 Docify uses a number of open source projects to work properly:
